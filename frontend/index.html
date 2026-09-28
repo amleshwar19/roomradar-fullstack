@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoomRadar — Smart Floor Manager · SRM IST</title>
+<style>
+:root{
+  --bg:#0b1020; --bg2:#101735; --card:#16204a; --card2:#1b2657;
+  --line:#2a3768; --txt:#eef1ff; --mut:#9aa6d0; --acc:#5eead4;
+  --acc2:#818cf8; --free:#34d399; --busy:#f87171; --warn:#fbbf24;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0; font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  background:radial-gradient(1200px 600px at 80% -10%, #1b2560 0%, var(--bg) 55%) fixed, var(--bg);
+  color:var(--txt); min-height:100vh}
+.wrap{max-width:1100px; margin:0 auto; padding:20px 16px 60px}
+header.top{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px}
+.brand{display:flex; align-items:center; gap:12px}
+.logo{width:46px;height:46px;border-radius:14px; display:grid; place-items:center; font-size:24px;
+  background:linear-gradient(135deg,var(--acc2),#22d3ee); box-shadow:0 6px 20px #0006}
+.brand h1{margin:0; font-size:22px; letter-spacing:.3px}
+.brand p{margin:2px 0 0; color:var(--mut); font-size:12.5px}
+.clock{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:10px 16px; text-align:right}
+.clock .t{font-size:20px; font-weight:700; font-variant-numeric:tabular-nums}
+.clock .d{font-size:12px; color:var(--mut)}
+.hero{background:linear-gradient(135deg,#1b2657,#141b3f); border:1px solid var(--line); border-radius:20px; padding:22px; margin-bottom:18px; box-shadow:0 10px 30px #0005}
+.hero h2{margin:0 0 4px; font-size:19px}
+.hero h2 .ai{background:linear-gradient(90deg,var(--acc),var(--acc2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero p.sub{margin:0 0 14px; color:var(--mut); font-size:13.5px}
+.airow{display:flex; gap:10px}
+.airow input{flex:1; background:#0d1330; border:1.5px solid var(--line); color:var(--txt);
+  border-radius:14px; padding:13px 16px; font-size:15px; outline:none}
+.airow input:focus{border-color:var(--acc2); box-shadow:0 0 0 3px #818cf833}
+.btn{border:0; border-radius:14px; padding:13px 22px; font-size:15px; font-weight:700; cursor:pointer;
+  background:linear-gradient(135deg,var(--acc2),#22d3ee); color:#0b1020}
+.btn:active{transform:scale(.97)}
+.chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+.chip{font-size:12.5px; color:var(--mut); background:#0d1330; border:1px solid var(--line);
+  border-radius:999px; padding:7px 12px; cursor:pointer}
+.chip:hover{color:var(--txt); border-color:var(--acc2)}
+.intent{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+.intent:empty{display:none}
+.itag{font-size:12px; background:#0d1330; border:1px dashed var(--acc2); color:#c7d2fe;
+  border-radius:8px; padding:6px 10px}
+.itag b{color:var(--acc)}
+#aiResults{margin-top:14px; display:grid; gap:10px}
+#aiResults:empty{display:none}
+.res{background:#0d1330; border:1px solid var(--line); border-left:4px solid var(--free); border-radius:12px; padding:12px 14px}
+.res.miss{border-left-color:var(--line); opacity:.75}
+.res h4{margin:0 0 4px; font-size:15px}
+.res .why{font-size:12.5px; color:var(--mut)}
+.res .why b{color:var(--acc)}
+.note{font-size:12.5px; color:var(--warn); background:#fbbf2412; border:1px solid #fbbf2444; border-radius:10px; padding:10px 12px; margin-top:10px}
+.controls{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; margin-bottom:18px;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; align-items:end}
+.ctl label{display:block; font-size:11.5px; color:var(--mut); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px}
+.ctl select,.ctl input[type=time],.ctl input[type=number]{width:100%; background:#0d1330; border:1px solid var(--line);
+  color:var(--txt); border-radius:10px; padding:10px 12px; font-size:14px; outline:none}
+.floorset{display:flex; gap:6px; flex-wrap:wrap}
+.fbtn{background:#0d1330; border:1px solid var(--line); color:var(--mut); border-radius:10px; padding:9px 13px; font-size:13.5px; cursor:pointer}
+.fbtn.on{background:#818cf826; border-color:var(--acc2); color:var(--txt)}
+.tgl{display:flex; gap:14px; align-items:center; font-size:13.5px; color:var(--mut)}
+.tgl label{display:flex; gap:6px; align-items:center; cursor:pointer; text-transform:none; font-size:13.5px; color:var(--mut); margin:0}
+input[type=checkbox]{width:17px; height:17px; accent-color:var(--acc2)}
+.floorsec{margin-bottom:22px}
+.floorsec>h3{margin:0 0 10px; font-size:16px; display:flex; align-items:center; gap:10px}
+.floorsec>h3 .cnt{font-size:11.5px; color:var(--mut); background:#0d1330; border:1px solid var(--line); padding:3px 10px; border-radius:999px}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px}
+.room{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; cursor:pointer; transition:.15s}
+.room:hover{border-color:var(--acc2); transform:translateY(-2px)}
+.room.dim{opacity:.45}
+.room .rh{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+.room .rn{font-size:17px; font-weight:800}
+.pill{font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.5px}
+.pill.free{background:#34d39922; color:var(--free); border:1px solid #34d39955}
+.pill.busy{background:#f8717122; color:var(--busy); border:1px solid #f8717155}
+.room .st{font-size:13px; color:var(--mut); margin-bottom:8px; min-height:34px}
+.room .st b{color:var(--txt)}
+.amen{display:flex; gap:8px; font-size:12px; color:var(--mut)}
+.drawer{position:fixed; inset:0; background:#000a; display:none; z-index:50; align-items:flex-end; justify-content:center}
+.drawer.open{display:flex}
+.sheet{background:var(--bg2); border:1px solid var(--line); border-bottom:0; border-radius:20px 20px 0 0;
+  width:100%; max-width:640px; max-height:88vh; overflow:auto; padding:22px}
+.sheet h3{margin:0 0 2px; font-size:20px}
+.sheet .sub{color:var(--mut); font-size:13px; margin-bottom:14px}
+.tl{display:grid; gap:6px; margin-bottom:16px}
+.trow{display:grid; grid-template-columns:118px 1fr; gap:10px; font-size:13px; align-items:center;
+  background:#0d1330; border:1px solid var(--line); border-radius:10px; padding:8px 12px}
+.trow .pt{color:var(--mut); font-variant-numeric:tabular-nums}
+.trow .ps.free{color:var(--free)}
+.trow .ps.busy{color:var(--busy)}
+.fw{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px}
+.fw span{font-size:12.5px; background:#34d39918; border:1px solid #34d39944; color:var(--free); border-radius:8px; padding:6px 10px}
+.closebtn{float:right; background:#0d1330; border:1px solid var(--line); color:var(--txt); border-radius:10px; padding:8px 14px; cursor:pointer}
+footer{margin-top:26px; color:var(--mut); font-size:12px; line-height:1.6; border-top:1px solid var(--line); padding-top:14px}
+.empty{color:var(--mut); font-size:13.5px; background:#0d1330; border:1px dashed var(--line); border-radius:12px; padding:14px; text-align:center}
+@media(max-width:560px){ .airow{flex-direction:column} .btn{width:100%} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand">
+    <div class="logo">🏫</div>
+    <div><h1>RoomRadar</h1><p>Smart floor manager · SRM IST Tiruchirappalli</p></div>
+  </div>
+  <div class="clock"><div class="t" id="clockT">--:--</div><div class="d" id="clockD"></div></div>
+</header>
+
+<div class="hero">
+  <h2><span class="ai">✨ AI Room Finder</span> — just describe what you need</h2>
+  <p class="sub">Type naturally, e.g. “I need an AC room on the ground floor for me and my team for the next 2 hours.” The AI parses your needs, checks every timetable, and returns rooms free for the whole duration.</p>
+  <div class="airow">
+    <input id="aiInput" placeholder='Try: "Free AC room on floor 5 for 8 people for 1 hour"…' autocomplete="off">
+    <button class="btn" id="aiGo">Find rooms</button>
+  </div>
+  <div class="chips" id="exChips"></div>
+  <div class="intent" id="intentChips"></div>
+  <div id="aiResults"></div>
+</div>
+
+<div class="controls">
+  <div class="ctl"><label>Day</label>
+    <select id="daySel">
+      <option value="today">Today (live)</option>
+      <option value="0">Monday</option><option value="1">Tuesday</option>
+      <option value="2">Wednesday</option><option value="3">Thursday</option>
+      <option value="4">Friday</option>
+    </select>
+  </div>
+  <div class="ctl"><label>Time</label>
+    <select id="timeMode"><option value="live">🔴 Live now</option><option value="custom">Pick a time…</option></select>
+  </div>
+  <div class="ctl" id="timePickWrap" style="display:none"><label>At</label><input type="time" id="timePick" value="10:00"></div>
+  <div class="ctl"><label>Need free for</label>
+    <select id="durSel"><option value="30">30 min</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="180">3 hours</option></select>
+  </div>
+  <div class="ctl"><label>Floors</label><div class="floorset" id="floorSet"></div></div>
+  <div class="ctl"><label>Min capacity</label><input type="number" id="capInput" min="1" max="200" value="1"></div>
+  <div class="ctl"><label>Amenities</label>
+    <div class="tgl">
+      <label><input type="checkbox" id="acChk"> ❄ AC</label>
+      <label><input type="checkbox" id="projChk"> 📽 Projector</label>
+    </div>
+  </div>
+</div>
+
+<div id="grid"></div>
+
+<footer>
+  <b style="color:var(--txt)">About the data.</b> Room occupancy is derived from the 10 official odd-semester timetables (13 sections). Each section's printed <i>Venue</i> is its home classroom; a room counts as <b>occupied</b> while its section has a class, and <b>free</b> during gaps, lunch, and periods when the class is timetabled elsewhere (labs, workshops, CDC/NSS/Yoga). 4 first-year sections print no venue, so 8 physical rooms are tracked: IST 225, 227, 211 (floor 2) · IST 411, 416 (floor 4) · IST 518, 519 (floor 5) · IST 602 (floor 6). Amenities shown (AC, projector, capacity) are standard IST-block classroom defaults. Weekends &amp; outside 9:00–16:50 → all rooms free.
+</footer>
+</div>
+
+<div class="drawer" id="drawer"><div class="sheet" id="sheet"></div></div>
+
+<script>
+/* ============ RoomRadar frontend: grid + drawer (API client) ============ */
+const $=id=>document.getElementById(id);
+const state={dayMode:"today",timeMode:"live",customMin:600,dur:60,floors:new Set(),minCap:1,ac:false,proj:false};
+let ROOMS=[],FLOORS=[];
+async function api(p,opts){const r=await fetch(p,opts);if(!r.ok)throw new Error("API "+r.status);return r.json();}
+function nowMin(){const d=new Date();return d.getHours()*60+d.getMinutes();}
+function effDay(){if(state.dayMode!=="today")return +state.dayMode;const js=new Date().getDay();return(js===0||js===6)?-1:js-1;}
+function effMin(){return state.timeMode==="live"?nowMin():state.customMin;}
+function renderClock(){const d=new Date();const t=d.getHours()*60+d.getMinutes();let h=Math.floor(t/60),m=t%60,ap=h>=12?"PM":"AM";h=h%12||12;
+$("clockT").textContent=h+":"+String(m).padStart(2,"0")+ap;
+$("clockD").textContent=d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"short"})+" \u00b7 IST";}
+setInterval(()=>{renderClock();if(state.timeMode==="live")renderGrid();},30000);
+function passFilters(r){if(state.floors.size&&!state.floors.has(r.floor))return false;if(r.cap<state.minCap)return false;
+if(state.ac&&!r.ac)return false;if(state.proj&&!r.proj)return false;return true;}
+function roomCard(r){
+const dim=passFilters(r)?"":"dim";let st;
+if(effDay()<0)st="No classes scheduled \u2014 <b>free all day</b>";
+else if(r.busy)st="<b>"+r.busyInfo.section+"</b> \u00b7 "+r.busyInfo.subject+"<br>Busy till "+r.busyInfo.until;
+else{const w=state.dur>=60?(state.dur/60)+"h":"30m";
+st=r.fitsWindow?("\u2705 <b>Free for your "+w+" window</b> \u00b7 till "+r.freeUntil)
+:("Free now \u00b7 till "+r.freeUntil+' <span style="color:var(--warn)">(not full '+state.dur+'m)</span>');}
+return '<div class="room '+dim+'" data-room="'+r.no+'">'
++'<div class="rh"><span class="rn">'+r.no+'</span> '
++'<span class="pill '+(r.busy?"busy":"free")+'">'+(r.busy?"Occupied":"Free")+'</span></div>'
++'<div class="st">'+st+'</div>'
++'<div class="amen"><span>\u2744\ufe0f AC</span><span>\ud83d\udcfd Proj</span><span>\ud83d\udc65 '+r.cap+'</span></div></div>';
+}
+async function renderGrid(){
+try{
+const d=await api("/api/availability?day="+effDay()+"&time="+effMin()+"&duration="+state.dur);
+let html="";
+for(const f of FLOORS){
+const rooms=d.rooms.filter(r=>r.floor===f);
+const freeN=rooms.filter(r=>!r.busy).length;
+html+='<div class="floorsec"><h3>Floor '+f+' <span class="cnt">'+freeN+'/'+rooms.length+' free</span></h3><div class="grid">';
+html+=rooms.map(roomCard).join("")+"</div></div>";}
+$("grid").innerHTML=html;
+}catch(e){$("grid").innerHTML='<div class="empty">\u26a0\ufe0f Backend unreachable \u2014 is the server running? (<code>npm start</code>)</div>';}
+}
+$("grid").addEventListener("click",e=>{const c=e.target.closest("[data-room]");if(c)openRoom(c.dataset.room);});
+async function openRoom(no){
+const d=await api("/api/rooms/"+encodeURIComponent(no)+"/schedule?day="+effDay());
+const tl=d.periods.map(p=>'<div class="trow"><span class="pt">P'+p.n+" \u00b7 "+p.start+"\u2013"+p.end+'</span> '
++'<span class="ps '+(p.busy?"busy":"free")+'">'+(p.busy?("\ud83d\udd34 "+p.section+" \u2014 "+p.subject):"\ud83d\udfe2 Free")+"</span></div>").join("");
+const fw=d.freeWindows.map(w=>"<span>"+w.start+" \u2013 "+w.end+"</span>").join("");
+$("sheet").innerHTML='<button class="closebtn" id="closeSheet">\u2715 Close</button>'
++"<h3>"+d.room.no+'</h3><div class="sub">Floor '+d.room.floor+" \u00b7 \ud83d\udc65 "+d.room.cap+" \u00b7 \u2744\ufe0f AC \u00b7 \ud83d\udcfd Projector<br>"
++'Home room of <b style="color:var(--txt)">'+d.room.sections.join(" & ")+"</b> \u00b7 "+d.dayLabel+"'s schedule</div>"
++'<div class="tl">'+tl+'</div><div class="sub" style="margin-bottom:8px">Free windows</div><div class="fw">'+(fw||"<span>None</span>")+"</div>";
+$("drawer").classList.add("open");
+$("closeSheet").onclick=()=>$("drawer").classList.remove("open");
+}
+$("drawer").addEventListener("click",e=>{if(e.target.id==="drawer")$("drawer").classList.remove("open");});
+</script>
+<script>
+/* ============ AI Room Finder (via backend) + controls ============ */
+let EXAMPLES=[];
+$("exChips").addEventListener("click",e=>{const c=e.target.closest("[data-i]");if(!c)return;
+$("aiInput").value=EXAMPLES[+c.dataset.i];aiSearch();});
+async function aiSearch(){
+const q=$("aiInput").value.trim();if(!q){$("aiInput").focus();return;}
+$("aiResults").innerHTML='<div class="empty">\ud83e\udd14 Thinking\u2026</div>';
+try{
+const r=await api("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q})});
+const it=r.intent,chips=[];
+chips.push("\ud83d\udccd Floor: <b>"+(it.floors?it.floors.map(f=>f===0?"ground":f).join(", "):"any")+"</b>");
+chips.push("\u23f1 Duration: <b>"+(it.durMin>=60?(it.durMin/60)+"h":it.durMin+"m")+"</b>");
+chips.push("\ud83d\udc65 Seats: <b>"+it.minCap+"+</b>");
+if(it.ac)chips.push("\u2744\ufe0f <b>AC</b>");
+if(it.proj)chips.push("\ud83d\udcfd <b>Projector</b>");
+chips.push("\ud83d\udd50 From: <b>"+it.dayLabel+" "+it.startLabel+"</b>");
+it.notes.forEach(n=>chips.push("\ud83d\udcad "+n));
+$("intentChips").innerHTML=chips.map(c=>'<span class="itag">'+c+"</span>").join("");
+let html="";
+if(r.note)html+='<div class="note">\u26a0\ufe0f '+r.note+"</div>";
+if(!r.matches.length)html+='<div class="empty">\ud83d\ude15 No room matches everything.'+(r.nearMiss.length?" Closest options are listed below \u2014 try relaxing a filter.":" Try a different time or duration.")+"</div>";
+else html+=r.matches.map(m=>'<div class="res"><h4>\ud83d\udfe2 '+m.no+' <span style="color:var(--mut);font-weight:400">\u00b7 Floor '+m.floor+"</span></h4>"
++'<div class="why">'+m.reasons.map(x=>"<b>"+x+"</b>").join(" \u00b7 ")+"</div></div>").join("");
+if(r.nearMiss.length&&r.matches.length<3)
+html+='<div style="color:var(--mut);font-size:12.5px;margin-top:6px">Also free-ish, but ruled out:</div>'
++r.nearMiss.map(m=>'<div class="res miss"><h4>'+m.no+' <span style="color:var(--mut);font-weight:400">\u00b7 Floor '+m.floor+'</span></h4><div class="why">\u2716 '+m.why+"</div></div>").join("");
+$("aiResults").innerHTML=html;
+$("aiResults").scrollIntoView({behavior:"smooth",block:"nearest"});
+}catch(e){$("aiResults").innerHTML='<div class="empty">\u26a0\ufe0f Search failed \u2014 backend unreachable.</div>';}
+}
+$("aiGo").onclick=aiSearch;
+$("aiInput").addEventListener("keydown",e=>{if(e.key==="Enter")aiSearch();});
+function buildFloorButtons(){$("floorSet").innerHTML=FLOORS.map(f=>'<button class="fbtn" data-f="'+f+'">F'+f+"</button>").join("");}
+$("floorSet").addEventListener("click",e=>{const b=e.target.closest(".fbtn");if(!b)return;const f=+b.dataset.f;
+b.classList.toggle("on");b.classList.contains("on")?state.floors.add(f):state.floors.delete(f);renderGrid();});
+$("daySel").onchange=e=>{state.dayMode=e.target.value;
+$("timeMode").value=state.dayMode==="today"?"live":"custom";state.timeMode=$("timeMode").value;
+$("timePickWrap").style.display=state.timeMode==="custom"?"":"none";renderGrid();};
+$("timeMode").onchange=e=>{state.timeMode=e.target.value;
+$("timePickWrap").style.display=state.timeMode==="custom"?"":"none";renderGrid();};
+$("timePick").onchange=e=>{const p=e.target.value.split(":");state.customMin=+p[0]*60+ +p[1];renderGrid();};
+$("durSel").onchange=e=>{state.dur=+e.target.value;renderGrid();};
+$("capInput").onchange=e=>{state.minCap=Math.max(1,+e.target.value||1);renderGrid();};
+$("acChk").onchange=e=>{state.ac=e.target.checked;renderGrid();};
+$("projChk").onchange=e=>{state.proj=e.target.checked;renderGrid();};
+(async function init(){
+renderClock();
+try{
+const meta=await api("/api/meta");FLOORS=meta.floors;
+ROOMS=await api("/api/rooms");
+EXAMPLES=await api("/api/examples");
+$("exChips").innerHTML=EXAMPLES.map((e,i)=>'<span class="chip" data-i="'+i+'">\ud83d\udca1 '+(e.length>52?e.slice(0,52)+"\u2026":e)+"</span>").join("");
+buildFloorButtons();renderGrid();
+}catch(e){$("grid").innerHTML='<div class="empty">\u26a0\ufe0f Can\u2019t reach the backend API.<br>Start it with <code>npm start</code> in the project folder, then reload.</div>';}
+})();
+</script>
+</body>
+
+</html>
